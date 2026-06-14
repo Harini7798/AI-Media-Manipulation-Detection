@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI edited Media detector</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brandMark" aria-hidden="true">D</div>
+          <div class="brandText">
+            <div class="brandName">AI Media Detection</div>
+            <div class="brandTag">Dashboard</div>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <a class="navItem active" href="#" data-page="dashboard">
+            <span class="navIcon">●</span>
+            Dashboard
+          </a>
+          <a class="navItem" href="#" id="navUpload" data-page="dashboard">
+            <span class="navIcon">▲</span>
+            Detect
+          </a>
+          <a class="navItem" href="#" id="navHistory" data-page="history">
+            <span class="navIcon">◆</span>
+            History
+          </a>
+          <a class="navItem" href="#" id="navSettings" data-page="settings">
+            <span class="navIcon">⚙</span>
+            Settings
+          </a>
+        </nav>
+
+        <div class="sidebarFooter">
+          <div class="xpRow">
+            <span class="xpDot" aria-hidden="true"></span>
+            <span class="xpText">Local Demo</span>
+          </div>
+          <div class="hint">Upload a face crop (or an image) to get a score.</div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="searchWrap">
+            <div class="searchIcon" aria-hidden="true">⌕</div>
+            <input class="search" placeholder="Search for a course, lesson, etc." disabled />
+          </div>
+
+          <div class="rightTop">
+            <div class="xpBadge" title="Model status">
+              <span class="xpBadgeDot" aria-hidden="true"></span>
+              <span id="statusText">Checking...</span>
+            </div>
+
+            <div class="avatar">
+              <div class="avatarImg" aria-hidden="true">R</div>
+              <div class="avatarMeta">
+                <div class="avatarName">rexeus</div>
+                <div class="avatarSub">Mac • Local</div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- ─── DASHBOARD PAGE ─────────────────────────────────────────────── -->
+        <section class="page pageDashboard" data-page="dashboard">
+          <section class="heroGrid">
+            <div class="heroCard">
+              <div class="heroTitleRow">
+                <div class="heroGreeting">Salut, User!</div>
+              </div>
+              <h1 class="heroHeadline">
+                Check your media for
+                <span class="accentText">AI edits</span>.
+              </h1>
+
+              <p class="heroSub">
+                Upload an image to analyze authenticity and get a confidence score.
+              </p>
+
+              <div class="heroModules">
+                <div class="moduleCard">
+                  <div class="moduleNum">01</div>
+                  <div class="moduleTitle">Upload</div>
+                  <div class="moduleDesc">Image or short video</div>
+                </div>
+                <div class="moduleCard orange">
+                  <div class="moduleNum">02</div>
+                  <div class="moduleTitle">Face Crop</div>
+                  <div class="moduleDesc">MTCNN + resize to 128x128</div>
+                </div>
+                <div class="moduleCard">
+                  <div class="moduleNum">03</div>
+                  <div class="moduleTitle">Score</div>
+                  <div class="moduleDesc">Pristine vs Deepfake</div>
+                </div>
+              </div>
+
+              <div class="uploadPanel">
+                <div class="uploadHeader">
+                  <div class="uploadTitle">Detect a face</div>
+                  <div class="uploadBadge" id="uploadHint">Waiting for upload</div>
+                </div>
+
+                <div class="uploadRow">
+                  <label class="uploadBtn" for="fileInput">Choose file</label>
+                  <input id="fileInput" type="file" accept="image/*,video/*" hidden />
+                  <button class="detectBtn" id="predictBtn" disabled>Detect</button>
+                </div>
+
+                <div class="previewRow">
+                  <div class="previewBox">
+                    <img id="previewImg" alt="Preview" />
+                    <video id="previewVideo" controls muted playsinline style="display:none;width:100%;height:100%;object-fit:cover;"></video>
+                    <div class="previewPlaceholder" id="previewPlaceholder">
+                      No file selected
+                    </div>
+                  </div>
+                  <div class="resultBox">
+                    <div class="resultTop">
+                      <div class="resultLabel">Result</div>
+                      <div class="resultStatus" id="resultStatus">—</div>
+                    </div>
+                    <div class="scoreRow">
+                      <div class="scoreBlock">
+                        <div class="scoreName">Pristine</div>
+                        <div class="scoreValue" id="pristineScore">0.00</div>
+                      </div>
+                      <div class="scoreBlock">
+                        <div class="scoreName">Deepfake</div>
+                        <div class="scoreValue" id="deepfakeScore">0.00</div>
+                      </div>
+                    </div>
+                    <div class="metaLine" id="metaLine"></div>
+                  </div>
+                </div>
+
+                <!-- ─── Explanation charts ─── -->
+                <div class="explainPanel" id="explainPanel" style="display:none;">
+                  <div class="explainHeader">
+                    <div class="explainTitle">How the model decided</div>
+                    <div class="explainSub" id="explainSub">Confidence breakdown for this image</div>
+                  </div>
+                  <div class="chartGrid">
+                    <div class="chartCard">
+                      <div class="chartCardTitle">Probability split</div>
+                      <div class="chartHolder"><canvas id="probChart"></canvas></div>
+                    </div>
+                    <div class="chartCard">
+                      <div class="chartCardTitle">Decision strength</div>
+                      <div class="chartHolder"><canvas id="confChart"></canvas></div>
+                    </div>
+                    <div class="chartCard wide">
+                      <div class="chartCardTitle">Where this score lands vs your history</div>
+                      <div class="chartHolder"><canvas id="histChart"></canvas></div>
+                    </div>
+                    <div class="chartCard wide" id="timelineChartCard" style="display:none;">
+                      <div class="chartCardTitle">Per-frame timeline (deepfake probability over time)</div>
+                      <div class="chartHolder"><canvas id="timelineChart"></canvas></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rightCard">
+              <div class="rightHeader">
+                <div>
+                  <div class="rightTitle">Scheduled</div>
+                  <div class="rightSub">Latest Predictions</div>
+                </div>
+                <div class="rightLink" id="clearHistory">Clear</div>
+              </div>
+
+              <div class="historyList" id="historyList">
+                <div class="historyEmpty">No predictions yet.</div>
+              </div>
+
+              <div class="progressSection">
+                <div class="progressRow">
+                  <div class="progressTitle">Model ready</div>
+                  <div class="progressPct" id="readyPct">0%</div>
+                </div>
+                <div class="progressBar">
+                  <div class="progressFill" id="progressFill"></div>
+                </div>
+                <div class="progressHint">This is a local demo UI; training is separate.</div>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- ─── HISTORY PAGE ──────────────────────────────────────────────── -->
+        <section class="page pageHistory" data-page="history" style="display:none;">
+          <div class="pageHeader">
+            <div>
+              <h1 class="pageTitle">Prediction History</h1>
+              <p class="pageSub">Every image you've analyzed in this browser, scored and stored locally.</p>
+            </div>
+            <div class="pageHeaderActions">
+              <input class="historySearchInput" id="historySearchInput" placeholder="Search by filename..." />
+              <button class="ghostBtn" id="historyClearAll">Clear all</button>
+            </div>
+          </div>
+
+          <div class="historyStats">
+            <div class="statCard">
+              <div class="statNum" id="statTotal">0</div>
+              <div class="statLabel">Total scans</div>
+            </div>
+            <div class="statCard">
+              <div class="statNum" id="statPristine">0</div>
+              <div class="statLabel">Pristine</div>
+            </div>
+            <div class="statCard">
+              <div class="statNum" id="statDeepfake">0</div>
+              <div class="statLabel">Deepfake</div>
+            </div>
+            <div class="statCard">
+              <div class="statNum" id="statAvgDeepfake">0%</div>
+              <div class="statLabel">Avg deepfake score</div>
+            </div>
+          </div>
+
+          <div class="historyGrid" id="historyGrid">
+            <div class="emptyState">No images analyzed yet. Go to Dashboard to upload one.</div>
+          </div>
+        </section>
+
+        <!-- ─── SETTINGS PAGE ─────────────────────────────────────────────── -->
+        <section class="page pageSettings" data-page="settings" style="display:none;">
+          <div class="pageHeader">
+            <div>
+              <h1 class="pageTitle">Settings</h1>
+              <p class="pageSub">Customize the appearance and manage your data.</p>
+            </div>
+          </div>
+
+          <div class="settingsGrid">
+            <div class="settingsCard">
+              <div class="settingsCardTitle">Appearance</div>
+              <div class="settingsRow">
+                <div>
+                  <div class="settingName">Theme</div>
+                  <div class="settingDesc">Pick a color palette for the app.</div>
+                </div>
+                <div class="themePicker" id="themePicker">
+                  <button class="themeOption themeDark" data-theme="dark" title="Dark"></button>
+                  <button class="themeOption themeLight" data-theme="light" title="Light"></button>
+                  <button class="themeOption themeBlue" data-theme="blue" title="Ocean blue"></button>
+                </div>
+              </div>
+              <div class="settingsRow">
+                <div>
+                  <div class="settingName">Animations</div>
+                  <div class="settingDesc">Smooth transitions and chart animations.</div>
+                </div>
+                <label class="toggleSwitch">
+                  <input type="checkbox" id="animToggle" checked />
+                  <span class="toggleSlider"></span>
+                </label>
+              </div>
+              <div class="settingsRow">
+                <div>
+                  <div class="settingName">Compact mode</div>
+                  <div class="settingDesc">Tighter spacing throughout the UI.</div>
+                </div>
+                <label class="toggleSwitch">
+                  <input type="checkbox" id="compactToggle" />
+                  <span class="toggleSlider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="settingsCard">
+              <div class="settingsCardTitle">Model</div>
+              <div class="settingsRow">
+                <div>
+                  <div class="settingName">Status</div>
+                  <div class="settingDesc" id="modelStatusDesc">Checking...</div>
+                </div>
+                <button class="ghostBtn" id="refreshStatusBtn">Refresh</button>
+              </div>
+              <div class="settingsRow">
+                <div>
+                  <div class="settingName">Model file</div>
+                  <div class="settingDesc settingMono" id="modelPathDesc">—</div>
+                </div>
+              </div>
+              <div class="settingsRow">
+                <div>
+                  <div class="settingName">Architecture</div>
+                  <div class="settingDesc">EfficientNet B0 backbone + RBF SVM classifier on 128×128 RGB face crops.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settingsCard">
+              <div class="settingsCardTitle">Data</div>
+              <div class="settingsRow">
+                <div>
+                  <div class="settingName">Stored predictions</div>
+                  <div class="settingDesc" id="storedCount">0 entries · 0 KB</div>
+                </div>
+                <button class="ghostBtn dangerBtn" id="clearAllDataBtn">Clear all</button>
+              </div>
+              <div class="settingsRow">
+                <div>
+                  <div class="settingName">Export history</div>
+                  <div class="settingDesc">Download your prediction history as JSON.</div>
+                </div>
+                <button class="ghostBtn" id="exportBtn">Export</button>
+              </div>
+            </div>
+
+            <div class="settingsCard">
+              <div class="settingsCardTitle">About</div>
+              <div class="settingsRow">
+                <div>
+                  <div class="settingName">AI Media Detection</div>
+                  <div class="settingDesc">Open-source deepfake detection demo. Built with TensorFlow, scikit-learn, and Flask. UI runs entirely in your browser; predictions stay on your machine.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

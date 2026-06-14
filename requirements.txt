@@ -1,0 +1,13 @@
+numpy<2
+pandas<3
+tensorflow>=2.13,<2.18
+keras>=2.13,<4
+keras_applications>=1.0.7
+opencv-python-headless>=4.8,<5
+mtcnn>=0.1.0
+h5py
+efficientnet
+split-folders
+flask>=3.0,<4
+scikit-learn>=1.3
+pytest>=7.0
