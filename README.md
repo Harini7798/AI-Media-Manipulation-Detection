@@ -190,9 +190,3 @@ The default model is trained on ~20 methods across FaceForensics++, Celeb-DF, DF
 Contributions are welcome. Please open an [issue](https://github.com/AdityaMalik5/ai-detect_media/issues) or submit a [pull request](https://github.com/AdityaMalik5/ai-detect_media/pulls).
 
 ---
-
-## Authors & License
-
-- **[AdityaMalik5](https://github.com/AdityaMalik5)**
-
-**License:** [MIT](LICENSE).
